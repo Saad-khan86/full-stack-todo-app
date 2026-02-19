@@ -1,6 +1,84 @@
-def main():
-    print("Hello from backend!")
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends, HTTPException
+from sqlmodel import SQLModel, Field, create_engine, Session, select 
+from app.settings import DATABASE_URL
+from typing import Annotated
+ 
+class Todo(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    content : str = Field(index=True, min_length=3, max_length=50)
+    is_completed: bool = Field(default=False)
+
+connection_string: str =str(DATABASE_URL).replace('postgresql', 'postgresql+psycopg2' )
+engine = create_engine(connection_string, connect_args={"sslmode" :"require"}, pool_recycle=300, pool_size=10, echo=True)
+
+def create_tables(): 
+    SQLModel.metadata.create_all(engine)
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print('Creating Tables')
+    create_tables()
+    print("Tables Created")
+    yield
+
+app = FastAPI(
+    lifespan=lifespan,  
+    title='My First Todo App',
+    version='1.0.0'
+)
+
+@app.get("/")
+def home():
+    return {"message":"wellcome to daily todo app"}
+
+@app.post("/todos", response_model=Todo)
+async def create_todo(todo:Todo, session:Annotated[Session, Depends(get_session)]):
+    session.add(todo)
+    session.commit()
+    session.refresh(todo)
+    return todo
+
+@app.get("/todos", response_model=list[Todo])
+async def get_all_todos(session:Annotated[Session, Depends(get_session)]):
+    todos = session.exec(select(Todo)).all()
+    if not todos:
+        raise HTTPException(status_code=404, detail="Todos not found")
+    return todos
+
+@app.get("/todos/{id}", response_model=Todo)
+async def get_single_todo(id:int, session:Annotated[Session, Depends(get_session)]):
+    single_todo: Todo = session.exec(select(Todo).where(Todo.id == id)).first()
+    if not single_todo:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return single_todo
+
+@app.put("/todos/{id}")
+async def edit_todo(todo:Todo, id:int, session:Annotated[Session, Depends(get_session)]):
+    existing_todo: Todo = session.exec(select(Todo).where(Todo.id == id)).first()
+    if existing_todo:
+        existing_todo.content = todo.content
+        existing_todo.is_completed = todo.is_completed
+        session.add(existing_todo)
+        session.commit()
+        session.refresh(existing_todo)
+    else:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    return existing_todo
 
 
-if __name__ == "__main__":
-    main()
+@app.delete("/todos/{id}")
+async def delete_todo(id:int, session:Annotated[Session, Depends(get_session)]):
+    todo: Todo = session.exec(select(Todo).where(Todo.id == id)).first()
+    if todo:
+        session.delete(todo)
+        session.commit()
+        return {"masaage" : "task sucessfully deleted"}
+    else:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return todo
