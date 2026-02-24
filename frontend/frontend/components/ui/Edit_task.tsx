@@ -1,6 +1,6 @@
 import React from 'react'
 
-export const New_task = () => {
+export const Edit_task = () => {
   return (
   <div>
     <form className='flex flex-col gap-4' action="">
@@ -16,4 +16,3 @@ export const New_task = () => {
   </div>
   )
 }
-
