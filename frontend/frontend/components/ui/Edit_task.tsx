@@ -6,7 +6,7 @@ export const Edit_task = () => {
     <form className='flex flex-col gap-4' action="">
       <input 
       type="text" 
-      placeholder='add task here' 
+      placeholder='edit task here' 
       minLength={3} 
       maxLength={25} 
       required

@@ -1,6 +1,6 @@
-import React from 'react'
 
-export const New_task = () => {
+
+export const Add_new_task = () => {
   return (
   <div>
     <form className='flex flex-col gap-4' action="">

@@ -8,7 +8,6 @@ export default function Home() {
     <div className="bg-gray-50 min-h-screen font-sans">
       <Header />
       <main className="container mx-auto mt-2 p-4 max-w-2xl">
-        < Modal />
         <TodoList />
       </main>
     </div>
