@@ -67,3 +67,20 @@ export async function status_changed(id: number, content:string, is_completed:bo
         return { status: "error", message: "Something went wrong" };
     }
 }
+
+export async function delete_todo(id: number) {
+
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/todos/${id}`, {
+            method: 'DELETE'
+        })
+        if (response.ok) {
+            revalidatePath("/todos/");
+            return { status: "success", message: "Todo deleted successfully" };
+        } else {
+            return { status: "error", message: "Not Found" };
+        }
+    } catch (error) {
+        return { status: "error", message: "Something went wrong" };
+    }
+}

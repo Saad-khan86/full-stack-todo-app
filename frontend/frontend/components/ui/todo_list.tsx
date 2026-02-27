@@ -7,7 +7,7 @@ import Task from "./Task";
 const TodoList = async () => {
 
   const response = await fetch('http://127.0.0.1:8000/todos')
-  const data = await response.json()
+  const data = await response.json()  
   const todo_list : Todo[] = data.sort((a:Todo,b:Todo)=>a.id - b.id)
 
   return (

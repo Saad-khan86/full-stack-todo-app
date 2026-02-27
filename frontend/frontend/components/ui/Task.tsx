@@ -2,7 +2,7 @@
 import { Pencil, Trash2, SquareCheck } from "lucide-react";
 import { Modal } from "./modal";
 import { ToolTip } from "./Tool_tip";
-import { status_changed } from "@/actions/actions";
+import { delete_todo, status_changed } from "@/actions/actions";
 import toast from "react-hot-toast";
 
 
@@ -15,8 +15,15 @@ export default function Task({ task }: { task: Todo }) {
     } else if (response.status == "error") {
       toast.error(response.message);
     }
+  }
 
-
+  const handleDelet = async () => {
+    const response = await delete_todo(task.id)
+    if (response.status == "success") {
+      toast.success(response.message);
+    } else if (response.status == "error") {
+      toast.error(response.message);
+    }
   }
 
   return (
@@ -45,7 +52,7 @@ export default function Task({ task }: { task: Todo }) {
 
           {/* Delete */}
           <ToolTip tooltip_content="Delete Task">
-            <button className="p-2 rounded hover:bg-red-100">
+            <button onClick = {handleDelet} className="p-2 rounded hover:bg-red-100">
               <Trash2 className="w-4 h-4 text-red-600" />
             </button>
           </ToolTip>
