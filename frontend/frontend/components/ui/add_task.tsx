@@ -1,6 +1,6 @@
 'use client'
 
-import add_todo from "@/actions/actions"
+import {add_todo} from "@/actions/actions"
 import { useActionState, useEffect} from "react"
 import toast from "react-hot-toast"
 
@@ -37,4 +37,3 @@ export const Add_new_task = () => {
   </div>
   )
 }
-
