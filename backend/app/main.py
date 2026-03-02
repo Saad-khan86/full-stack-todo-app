@@ -38,6 +38,7 @@ def home():
 
 @app.post("/todos", response_model=Todo)
 async def create_todo(todo:Todo, session:Annotated[Session, Depends(get_session)]):
+    todo.id = None
     session.add(todo)
     session.commit()
     session.refresh(todo)

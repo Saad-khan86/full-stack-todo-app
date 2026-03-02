@@ -1,18 +1,16 @@
-import { Modal } from "./modal";
-import { Button } from "./button";
-import { ToolTip } from "./Tool_tip";
-import { Pencil, Trash2 } from "lucide-react";
+import { Button } from "./ui/button";
 import Task from "./Task";
+import Modal from "./Modal";
 
 const TodoList = async () => {
 
   const response = await fetch('http://127.0.0.1:8000/todos')
-  const data = await response.json()  
-  const todo_list : Todo[] = data.sort((a:Todo,b:Todo)=>a.id - b.id)
+  const data = await response.json()
+  const todo_list: Todo[] = Array.isArray(data) ? data.sort((a, b) => a.id - b.id) : []
 
   return (
     <>
-      <Modal title="Add new Taks" new_task={true}>
+      <Modal title="Add new Task" new_task={true}>
         <Button className="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-sm shadow-md transition-colors flex items-center justify-center" variant="default">ADD TASK +</Button>
       </Modal>
       <div className="bg-white rounded-lg shadow-md mt-4">
@@ -25,10 +23,17 @@ const TodoList = async () => {
             </tr>
           </thead>
           <tbody>
-            {todo_list.map((task) => (
-              < Task key={task.id} task={task} />
-            ))
-            }
+            {todo_list.length === 0 ? (
+              <tr>
+                <td colSpan={2} className="p-4 text-center text-gray-500">
+                  🚫 There is no Task added yet. Click <strong>Add Task</strong> to get started.
+                </td>
+              </tr>
+            ) : (
+              todo_list.map((task) => (
+                <Task key={task.id} task={task} />
+              ))
+            )}
           </tbody>
         </table>
       </div>

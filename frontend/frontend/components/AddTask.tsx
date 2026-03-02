@@ -6,13 +6,16 @@ import toast from "react-hot-toast"
 
 
 const initialState = {status:"", message:""}
-export const Add_new_task = () => {
+
+  const AddTask = ({closeModal}:{closeModal: () => void}) => {
   const [state, form_action, pending] = useActionState( add_todo, initialState)
   const {status, message} = state
 
   useEffect( () => {
     if (status == 'success'){
       toast.success(message)
+      closeModal()
+
     }
     else if (status == 'error'){
       toast.error(message)
@@ -37,3 +40,5 @@ export const Add_new_task = () => {
   </div>
   )
 }
+
+export default AddTask

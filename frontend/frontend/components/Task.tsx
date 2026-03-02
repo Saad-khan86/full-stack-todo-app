@@ -1,12 +1,13 @@
 'use client'
-import { Pencil, Trash2, SquareCheck } from "lucide-react";
-import { Modal } from "./modal";
-import { ToolTip } from "./Tool_tip";
+import { Pencil, Trash2 } from "lucide-react";
+import ToolTip from "./ToolTip";
 import { delete_todo, status_changed } from "@/actions/actions";
 import toast from "react-hot-toast";
+import Modal from "./Modal";
 
 
-export default function Task({ task }: { task: Todo }) {
+
+const Task = ({ task }: { task: Todo }) => {
 
   const handleStatus = async () => {
     const response = await status_changed(task.id, task.content, task.is_completed)
@@ -43,9 +44,9 @@ export default function Task({ task }: { task: Todo }) {
 
           {/* Edit */}
           <ToolTip tooltip_content="Edit Task">
-            <Modal title="Edit Taks" edit_task={true} task={task}>
+            <Modal title="Edit Task" edit_task={true} task={task}>
               <button className="p-2 rounded hover:bg-zinc-100">
-                <Pencil className="w-4 h-4 text-blue-6  00" />
+                <Pencil className="w-4 h-4 text-blue-600" />
               </button>
             </Modal>
           </ToolTip>
@@ -61,3 +62,5 @@ export default function Task({ task }: { task: Todo }) {
     </>
   );
 }
+
+export default Task

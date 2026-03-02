@@ -6,7 +6,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export function ToolTip({ tooltip_content, children }: { tooltip_content: string, children: React.ReactNode }) {
+const ToolTip = ({ tooltip_content, children }: { tooltip_content: string, children: React.ReactNode }) => {
   return (
     <TooltipProvider>
       <Tooltip>
@@ -20,3 +20,5 @@ export function ToolTip({ tooltip_content, children }: { tooltip_content: string
     </TooltipProvider>
   )
 }
+
+export default ToolTip
