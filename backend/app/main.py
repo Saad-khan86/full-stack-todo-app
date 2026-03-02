@@ -1,24 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
-from sqlmodel import SQLModel, Field, create_engine, Session, select 
-from app.settings import DATABASE_URL
 from typing import Annotated
+from sqlmodel import Session, select
+from app.db import create_tables, get_session
+from app.models import Todo
  
-class Todo(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    content : str = Field(index=True, min_length=3, max_length=50)
-    is_completed: bool = Field(default=False)
-
-connection_string: str =str(DATABASE_URL).replace('postgresql', 'postgresql+psycopg2' )
-engine = create_engine(connection_string, connect_args={"sslmode" :"require"}, pool_recycle=300, pool_size=10, echo=True)
-
-def create_tables(): 
-    SQLModel.metadata.create_all(engine)
-
-def get_session():
-    with Session(engine) as session:
-        yield session
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print('Creating Tables')
