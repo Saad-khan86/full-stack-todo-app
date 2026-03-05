@@ -4,6 +4,7 @@ from typing import Annotated
 from sqlmodel import Session, select
 from app.db import create_tables, get_session
 from app.models import Todo
+from app.router.user import user_router
  
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,11 +13,9 @@ async def lifespan(app: FastAPI):
     print("Tables Created")
     yield
 
-app = FastAPI(
-    lifespan=lifespan,  
-    title='My First Todo App',
-    version='1.0.0'
-)
+app = FastAPI(lifespan=lifespan, title='My First Todo App', version='1.0.0')
+
+app.include_router(router=user_router)
 
 @app.get("/")
 def home():
