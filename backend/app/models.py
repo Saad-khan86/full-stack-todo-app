@@ -1,9 +1,7 @@
 from typing import Annotated
-
 from fastapi import Form
 from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
-
 
 class Todo(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
