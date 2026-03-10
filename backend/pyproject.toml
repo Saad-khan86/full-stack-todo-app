@@ -5,6 +5,7 @@ description = "this is simple backend for todo_app"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "bcrypt==4.0.1",
     "fastapi[standard]>=0.135.1",
     "passlib[bcrypt]==1.7.4",
     "psycopg2-binary>=2.9.11",
