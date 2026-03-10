@@ -17,15 +17,15 @@ async def user_page():
     return {"wellcome to user page"}
 
 @user_router.post("/register")
-async def register_user(FromData: Annotated[Register_User, Depends()], session: Annotated[Session, Depends(get_session)]):
-    user = session.exec(select(User).where(User.email == FromData.email)).first()
+async def register_user(FormData: Annotated[Register_User, Depends()], session: Annotated[Session, Depends(get_session)]):
+    user = session.exec(select(User).where(User.email == FormData.email)).first()
     if user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
     new_user = User(
-    username = FromData.username,
-    email = FromData.email,
-    password = hash_password(FromData.password)
+    username = FormData.username,
+    email = FormData.email,
+    password = hash_password(FormData.password) 
     )
 
     session.add(new_user)
