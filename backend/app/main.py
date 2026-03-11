@@ -21,6 +21,10 @@ app.include_router(router=user_router)
 def home():
     return {"message":"wellcome to daily todo app"}
 
+@app.post("/login")
+async def login():
+    pass
+
 @app.post("/todos", response_model=Todo)
 async def create_todo(todo:Todo, session:Annotated[Session, Depends(get_session)]):
     todo.id = None
