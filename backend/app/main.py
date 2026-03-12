@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from typing import Annotated
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from app.db import create_tables, get_session
-from app.models import Todo
+from app.models import Todo, User
 from app.router.user import user_router
+from app.auth import authenticate_user, verify_password
  
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,8 +24,12 @@ def home():
     return {"message":"wellcome to daily todo app"}
 
 @app.post("/login")
-async def login():
-    pass
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session:Annotated[Session, Depends(get_session)]):
+    user = authenticate_user(form_data.username, form_data.password, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    return user
+
 
 @app.post("/todos", response_model=Todo)
 async def create_todo(todo:Todo, session:Annotated[Session, Depends(get_session)]):
