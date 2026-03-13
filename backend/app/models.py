@@ -19,3 +19,7 @@ class Register_User (BaseModel):
     username: Annotated[ str, Form()]
     email: Annotated[ str, Form()]
     password: Annotated[ str, Form()]
+
+class JWT_Token(BaseModel):
+    access_token: str
+    token_type: str

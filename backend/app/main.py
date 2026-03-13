@@ -4,9 +4,9 @@ from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from app.db import create_tables, get_session
-from app.models import Todo, User
+from app.models import JWT_Token, Todo, User
 from app.router.user import user_router
-from app.auth import authenticate_user, verify_password
+from app.auth import authenticate_user, create_access_token, verify_password
  
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,12 +23,13 @@ app.include_router(router=user_router)
 def home():
     return {"message":"wellcome to daily todo app"}
 
-@app.post("/login")
+@app.post("/login", response_model= JWT_Token)
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session:Annotated[Session, Depends(get_session)]):
     user = authenticate_user(form_data.username, form_data.password, session)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    return user
+    access_token = create_access_token({"sub":form_data.username})
+    return JWT_Token(access_token=access_token, token_type="bearer")
 
 
 @app.post("/todos", response_model=Todo)
