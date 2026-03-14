@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.models import Register_User, User
 from app.db import get_session
-from app.auth import get_user_from_db, hash_password
+from app.auth import current_user, get_user_from_db, hash_password
     
 user_router: APIRouter = APIRouter(
     prefix='/user',
@@ -34,3 +34,10 @@ async def register_user(new_user: Annotated[Register_User, Depends()], session: 
     session.refresh(new_user)
 
     return {"message": f""" User with {new_user.username} successfully registered """}
+
+@user_router.get("/profile")
+async def user_profile(session:Annotated[Session, Depends(get_session)], current_user: Annotated[User, Depends(current_user)]):
+    user = get_user_from_db(session, current_user.username)
+    if not user:
+        raise HTTPException(status_code=404, detail="user not found")
+    return user

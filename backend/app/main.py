@@ -4,9 +4,9 @@ from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from app.db import create_tables, get_session
-from app.models import JWT_Token, Todo, User
+from app.models import Create_Todo, JWT_Token, Todo, User
 from app.router.user import user_router
-from app.auth import authenticate_user, create_access_token, verify_password
+from app.auth import authenticate_user, create_access_token, current_user, get_user_from_db
  
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,32 +31,36 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], sess
     access_token = create_access_token({"sub":form_data.username})
     return JWT_Token(access_token=access_token, token_type="bearer")
 
-
 @app.post("/todos", response_model=Todo)
-async def create_todo(todo:Todo, session:Annotated[Session, Depends(get_session)]):
-    todo.id = None
-    session.add(todo)
+async def create_todo(current_user: Annotated[User, Depends(current_user)], todo:Create_Todo, session:Annotated[Session, Depends(get_session)]):
+    new_todo: Todo = Todo(content=todo.content, user_id=current_user.id)
+    new_todo.id = None
+    session.add(new_todo)
     session.commit()
-    session.refresh(todo)
-    return todo
+    session.refresh(new_todo)
+    return new_todo
 
 @app.get("/todos", response_model=list[Todo])
-async def get_all_todos(session:Annotated[Session, Depends(get_session)]):
-    todos = session.exec(select(Todo)).all()
+async def get_all_todos(session:Annotated[Session, Depends(get_session)], current_user: Annotated[User, Depends(current_user)]):
+    todos = session.exec(select(Todo).where(Todo.user_id == current_user.id)).all()
+    
     if not todos:
         raise HTTPException(status_code=404, detail="Todos not found")
     return todos
 
 @app.get("/todos/{id}", response_model=Todo)
-async def get_single_todo(id:int, session:Annotated[Session, Depends(get_session)]):
-    single_todo: Todo = session.exec(select(Todo).where(Todo.id == id)).first()
-    if not single_todo:
+async def get_single_todo(id:int, session:Annotated[Session, Depends(get_session)], current_user: Annotated[User, Depends(current_user)]):
+    user_todo: Todo = session.exec(select(Todo).where(Todo.user_id == current_user.id)).all()
+    mathed_todo = next((todo for todo in user_todo if todo.id == id ), None)
+    if not mathed_todo:
         raise HTTPException(status_code=404, detail="Task not found")
-    return single_todo
+    return mathed_todo
 
 @app.put("/todos/{id}")
-async def edit_todo(todo:Todo, id:int, session:Annotated[Session, Depends(get_session)]):
-    existing_todo: Todo = session.exec(select(Todo).where(Todo.id == id)).first()
+async def edit_todo(todo:Todo, id:int, session:Annotated[Session, Depends(get_session)], current_user: Annotated[User, Depends(current_user)]):
+    user_todo: Todo = session.exec(select(Todo).where(Todo.user_id == current_user.id)).all()
+    existing_todo = next((todo for todo in user_todo if todo.id == id ), None)
+
     if existing_todo:
         existing_todo.content = todo.content
         existing_todo.is_completed = todo.is_completed
@@ -70,8 +74,9 @@ async def edit_todo(todo:Todo, id:int, session:Annotated[Session, Depends(get_se
 
 
 @app.delete("/todos/{id}")
-async def delete_todo(id:int, session:Annotated[Session, Depends(get_session)]):
-    todo: Todo = session.exec(select(Todo).where(Todo.id == id)).first()
+async def delete_todo(id:int, session:Annotated[Session, Depends(get_session)], current_user: Annotated[User, Depends(current_user)]):
+    user_todo: Todo = session.exec(select(Todo).where(Todo.user_id == current_user.id)).all()
+    todo = next((todo for todo in user_todo if todo.id == id ), None)
     if todo:
         session.delete(todo)
         session.commit()
