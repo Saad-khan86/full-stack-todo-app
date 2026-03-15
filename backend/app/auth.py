@@ -13,16 +13,17 @@ oauth_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 SECRET_KEY= "DhGBeri6bs1d58DT0AaVfLcSADG5P2OKM156qzahzjU"
 ALGORITHM = "HS256"
 
-pwd_context = CryptContext(schemes=["bcrypt"])
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
-def hash_password(password: str):
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def verify_password(plain, hashed):
+    return pwd_context.verify(plain, hashed)
+
+
+def hash_password(password):
     return pwd_context.hash(password)
-
-
-def verify_password(plain_password, hashed_password):
-
-    return pwd_context.verify(plain_password, hashed_password)
 
 def get_user_from_db(session: Annotated[Session, Depends(get_session)], username: str | None = None, email: str | None = None):
 
@@ -43,29 +44,33 @@ def authenticate_user(username, password, session: Annotated[Session, Depends(ge
         return False
     return db_user
 
-def create_access_token(data:dict):
-    data_to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=30)
-    data_to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(data_to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+def create_access_token(data: dict):
+    to_encode = data.copy()
+
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    to_encode.update({"exp": expire, "type": "access"})
+
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def create_refresh_token(data: dict):
+    to_encode = data.copy()
+
+    expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
+    to_encode.update({"exp": expire, "type": "refresh"})
+
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def current_user(token:Annotated[str, Depends(oauth_scheme)], session:Annotated[Session, Depends(get_session)]):
-    credential_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Invalid token, Please login again",
-    headers={"www-Authenticate": "Bearer"}
-    )
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            username = payload.get("sub")
 
-    try:
-        payload = jwt.decode(token, SECRET_KEY, ALGORITHM)
-        user_name = payload.get("sub")
-        if not user_name:
-            raise credential_exception
-    except JWTError:
-        raise credential_exception
+        except:
+             raise HTTPException(status_code=401)
     
-    user = get_user_from_db(session, user_name)
-    if not user:
-        raise credential_exception
-    return user
+        user = get_user_from_db(session, username)
+        if not user:
+           raise HTTPException(status_code=401)
+        return user

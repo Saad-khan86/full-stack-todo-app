@@ -6,8 +6,10 @@ from sqlmodel import Session, select
 from app.db import create_tables, get_session
 from app.models import Create_Todo, JWT_Token, Todo, User
 from app.router.user import user_router
-from app.auth import authenticate_user, create_access_token, current_user, get_user_from_db
- 
+from app.auth import authenticate_user, create_access_token, current_user, get_user_from_db, create_refresh_token
+from jose import jwt, JWTError
+from app.auth import SECRET_KEY, ALGORITHM
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print('Creating Tables')
@@ -24,12 +26,41 @@ def home():
     return {"message":"wellcome to daily todo app"}
 
 @app.post("/login", response_model= JWT_Token)
-async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session:Annotated[Session, Depends(get_session)]):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
+
     user = authenticate_user(form_data.username, form_data.password, session)
+
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-    access_token = create_access_token({"sub":form_data.username})
-    return JWT_Token(access_token=access_token, token_type="bearer")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    access_token = create_access_token({"sub": user.username})
+    refresh_token = create_refresh_token({"sub": user.username})
+
+    return JWT_Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer"
+    )
+
+@app.post("/refresh")
+def refresh_token(refresh_token: str):
+
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401)
+
+        username = payload.get("sub")
+
+    except:
+        raise HTTPException(status_code=401)
+
+    new_access_token = create_access_token({"sub": username})
+
+    return {
+        "access_token": new_access_token
+    }
 
 @app.post("/todos", response_model=Todo)
 async def create_todo(current_user: Annotated[User, Depends(current_user)], todo:Create_Todo, session:Annotated[Session, Depends(get_session)]):
