@@ -1,12 +1,13 @@
 import { Button } from "./ui/button";
 import Task from "./Task";
 import Modal from "./Modal";
+import { get_all_todos } from "@/actions/actions";
 
 const TodoList = async () => {
 
-  const response = await fetch('http://127.0.0.1:8000/todos')
-  const data = await response.json()
-  const todo_list: Todo[] = Array.isArray(data) ? data.sort((a, b) => a.id - b.id) : []
+  const result = await get_all_todos();
+
+  const todo_list: Todo[] = Array.isArray(result?.data) ? result.data.sort((a, b) => a.id - b.id) : []
 
   return (
     <>
