@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from app.db import create_tables, get_session
-from app.models import Create_Todo, JWT_Token, Todo, User
+from app.models import Create_Todo, JWT_Token, RefreshRequest, Todo, User
 from app.router.user import user_router
 from app.auth import authenticate_user, create_access_token, current_user, get_user_from_db, create_refresh_token
 from jose import jwt, JWTError
@@ -43,7 +43,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
     )
 
 @app.post("/refresh")
-def refresh_token(refresh_token: str):
+def refresh_token(data: RefreshRequest):
+    refresh_token = data.refresh_token
 
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
