@@ -51,7 +51,7 @@ export async function add_todo(state: { status: string; message: string }, formD
         })
 
         const data = await response.json();
-        if (data.content) {
+        if (response.ok) {
             revalidatePath("/todos/");
             return { status: "success", message: "Todo added successfully" };
         } else if (response.status === 401) {
@@ -126,10 +126,7 @@ export async function delete_todo(id: number) {
     try {
 
         const response = await authFetch(`http://127.0.0.1:8000/todos/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            method: 'DELETE'
         })
         if (response.ok) {
             revalidatePath("/todos/");
@@ -155,6 +152,8 @@ export async function user_register(
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
+    let cookieStore = (await cookies())
+
     try {
         const response = await fetch('http://127.0.0.1:8000/user/register', {
             method: 'POST',
@@ -167,15 +166,13 @@ export async function user_register(
         if (response.ok) {
 
             // ✅ STORE TOKENS IN COOKIES
-            (await
-                // ✅ STORE TOKENS IN COOKIES
-                cookies()).set("access_token", data.access_token, {
-                    httpOnly: true,
-                    secure: false, // production me true
-                    path: "/",
-                });
+            cookieStore.set("access_token", data.access_token, {
+                httpOnly: true,
+                secure: false, // production me true
+                path: "/",
+            });
 
-            (await cookies()).set("refresh_token", data.refresh_token, {
+            cookieStore.set("refresh_token", data.refresh_token, {
                 httpOnly: true,
                 secure: false,
                 path: "/",
@@ -201,6 +198,8 @@ export async function user_login(
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
 
+    let cookieStore = (await cookies())
+
     try {
         // ⚠️ OAuth2 ke liye FormData hi bhejna hai
         const body = new URLSearchParams();
@@ -220,16 +219,15 @@ export async function user_login(
 
         if (response.ok) {
 
-            // ✅ STORE TOKENS IN COOKIES
-            (await
-                // ✅ STORE TOKENS IN COOKIES
-                cookies()).set("access_token", data.access_token, {
-                    httpOnly: true,
-                    secure: false, // production me true
-                    path: "/",
-                });
 
-            (await cookies()).set("refresh_token", data.refresh_token, {
+            // ✅ STORE TOKENS IN COOKIES
+            cookieStore.set("access_token", data.access_token, {
+                httpOnly: true,
+                secure: false, // production me true
+                path: "/",
+            });
+
+            cookieStore.set("refresh_token", data.refresh_token, {
                 httpOnly: true,
                 secure: false,
                 path: "/",
@@ -248,99 +246,67 @@ export async function user_login(
     }
 }
 
-export async function refresh_access_token() {
+// export async function refresh_access_token() {
 
-    const refresh_token = (await cookies()).get("refresh_token")?.value;
-    console.log("checking refresh token in own func ", refresh_token)
-    if (!refresh_token) {
-        throw new Error("No refresh token found please login");
-    }
-    try {
-        const response = await fetch("http://localhost:8000/refresh", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                refresh_token: refresh_token
-            })
-        });
-        console.log("check respose in refresh accses token", response)
+//     let cookieStore = (await cookies())
 
-        if (response.status == 401) {
-            return null;
-        }
+//     const refresh_token = cookieStore.get("refresh_token")?.value;
 
-        const data = await response.json();
+//     console.log("checking refresh token in own func ", refresh_token)
+//     if (!refresh_token) {
+//         throw new Error("No refresh token found please login");
+//     }
+//     try {
+//         const response = await fetch("http://localhost:8000/refresh", {
+//             method: "POST",
+//             headers: {
+//                 "Content-Type": "application/json"
+//             },
+//             body: JSON.stringify({
+//                 refresh_token: refresh_token
+//             })
+//         });
+//         console.log("check status in refresh accses token", response.status)
 
-        (await cookies()).set("access_token", data.access_token, {
-            httpOnly: true,
-            secure: false,
-            path: "/",
-        });
+//         if (response.status == 401) {
+//             return null;
+//         }
 
-        return data.access_token;
+//         const data = await response.json();
+//         console.log("check data in refresh func", data);
 
-    }
-    catch {
-        throw new Error("Server error");
-    }
-};
+//         return data.access_token;
 
-export async function authFetch(
-    url: string,
-    options: RequestInit = {}
-): Promise<Response> {
+//     }
+//     catch {
+//         throw new Error("Server error");
+//     }
+// };
 
-    let response: Response;
+export async function authFetch(url: string, options: RequestInit = {}) {
+
+    const cookieStore = await cookies();
+    const access_token = cookieStore.get("access_token")?.value;
 
     try {
-        const token = (await cookies()).get("access_token")?.value;
 
-        if (!token) {
+        if (!access_token) {
             throw new Error("No access token found");
         }
 
-        response = await fetch(url, {
+        const res = await fetch(url, {
             ...options,
             headers: {
                 ...(options.headers as HeadersInit || {}),
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${access_token}`,
             },
         });
-        console.log("response status check in acceses_token: ", response.status)
-        console.log("response check in acceses_token: ", response)
+        console.log("response status check in acceses_token: ", res.status)
 
-        // 🔁 Token expired
-        if (response.status === 401) {
-            console.log("before running refresh token func")
-            const new_token = await refresh_access_token();
-            console.log("after running refresh token func")
-            console.log("check refresh token:", new_token)
-            if (!new_token || new_token == null) {
-                // ❗ refresh bhi fail → logout
-                const cookieStore = (await cookies());
+        return res;
 
-                cookieStore.delete("access_token");
-                cookieStore.delete("refresh_token");
-
-                throw new Error("Session expired. Please login again.");
-            }
-
-            response = await fetch(url, {
-                ...options,
-                headers: {
-                    ...(options.headers as HeadersInit || {}),
-                    Authorization: `Bearer ${new_token}`,
-                },
-            });
-            console.log("response status check in refresh_token: ", response.status)
-            console.log("response check in refresh_token: ", response)
-        }
-
-        return response;
-
-    } catch {
-        throw new Error("Something went wrong in authFetch");
+    } catch (error) {
+        console.error(error);
+        throw error;
     }
 }

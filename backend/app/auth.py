@@ -14,7 +14,7 @@ SECRET_KEY= "DhGBeri6bs1d58DT0AaVfLcSADG5P2OKM156qzahzjU"
 ALGORITHM = "HS256"
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1
-REFRESH_TOKEN_EXPIRE_DAYS = 3
+REFRESH_TOKEN_EXPIRE_DAYS = 5
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
