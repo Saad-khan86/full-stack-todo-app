@@ -28,9 +28,9 @@ export default function RegisterPage() {
     )
 
     return (
-        <div className="flex justify-center items-center min-h-screen">
+        <div className="flex justify-center items-center min-h-screen ">
 
-            <form action={formAction} className="flex flex-col gap-4 w-80">
+            <form action={formAction} className="flex flex-col gap-4 w-80 p-5 border-1 shadow">
 
                 <h1 className="text-2xl font-bold">Register</h1>
 

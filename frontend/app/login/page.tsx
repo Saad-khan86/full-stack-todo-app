@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { user_login } from '@/actions/actions'; // path adjust karo
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const initialState = { status: "", message: "" }
 
@@ -27,7 +28,7 @@ export default function LoginPage() {
     return (
         <div className="flex justify-center items-center min-h-screen">
 
-            <form action={formAction} className="flex flex-col gap-4 w-80">
+            <form action={formAction} className="flex flex-col gap-4 w-80 p-5 border-1 shadow">
 
                 <h1 className="text-2xl font-bold">Login</h1>
 
@@ -54,6 +55,12 @@ export default function LoginPage() {
                 >
                     {isPending ? 'Logging in...' : 'Login'}
                 </button>
+
+                <div><p
+                        className={`text-sm`}
+                    >
+                        If you don't have account please <Link className='text-blue-500' href='/register'>Register</Link>
+                    </p></div>
 
                 {/* Optional message */}
                 {message && (
