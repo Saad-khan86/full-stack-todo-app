@@ -6,7 +6,7 @@ export async function proxy(request: NextRequest) {
   
   // 2. Helper function to clean up and redirect
   const handleAuthFailure = () => {
-    const response = NextResponse.redirect(new URL('/login', request.url));
+    const response = NextResponse.next()
     response.cookies.delete('access_token');
     response.cookies.delete('refresh_token');
     return response;
@@ -19,9 +19,8 @@ export async function proxy(request: NextRequest) {
 
   // 2. Refresh logic agar access token expire ho chuka hai
   let response = NextResponse.next()
-  console.log("NextResponse: ", response.status);
   
-  if (response.status == 401) {
+  if (!access_token && refresh_token) {
     try {
       const res = await fetch("http://localhost:8000/refresh", {
         method: "POST",
@@ -36,6 +35,7 @@ export async function proxy(request: NextRequest) {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           path: '/',
+          maxAge: 60 // 1 minute (60 seconds)
         });
 
         return response;

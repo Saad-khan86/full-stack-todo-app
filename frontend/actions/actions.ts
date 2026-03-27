@@ -1,6 +1,8 @@
 'use server'
 import { revalidatePath } from "next/cache"
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export async function get_all_todos() {
     try {
@@ -31,10 +33,13 @@ export async function get_all_todos() {
         }
 
     } catch (error) {
-        return {
-            status: "error",
-            message: "Server error"
-        };
+        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
+        if (isRedirectError(error)) {
+            throw error;
+        }
+
+        console.error("Action Error:", error);
+        return { status: "error", message: "Something went wrong" };
     }
 }
 
@@ -63,6 +68,12 @@ export async function add_todo(state: { status: string; message: string }, formD
 
         }
     } catch (error) {
+        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
+        if (isRedirectError(error)) {
+            throw error;
+        }
+
+        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -90,6 +101,12 @@ export async function edit_todo(state: { status: string; message: string }, { id
 
         }
     } catch (error) {
+        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
+        if (isRedirectError(error)) {
+            throw error;
+        }
+
+        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -104,19 +121,23 @@ export async function status_changed(id: number, content: string, is_completed: 
             },
             body: JSON.stringify({ content: content, is_completed: !is_completed })
         })
-        const data = await response.json();
-        if (data.content) {
+        if (response.ok) {
             revalidatePath("/todos/");
             return { status: "success", message: "status changed successfully" };
-        } else if (response.status === 401) {
+        } else (response.status === 401)
+        return {
+            status: "error",
+            message: "Unauthorized"
 
-            return {
-                status: "error",
-                message: "Unauthorized"
-            };
 
         }
     } catch (error) {
+        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
+        if (isRedirectError(error)) {
+            throw error;
+        }
+
+        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -131,15 +152,19 @@ export async function delete_todo(id: number) {
         if (response.ok) {
             revalidatePath("/todos/");
             return { status: "success", message: "Todo deleted successfully" };
-        } else if (response.status === 401) {
-
-            return {
-                status: "error",
-                message: "Unauthorized"
-            };
+        } else (response.status === 401)
+        return {
+            status: "error",
+            message: "Unauthorized"
 
         }
     } catch (error) {
+        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
+        if (isRedirectError(error)) {
+            throw error;
+        }
+
+        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -168,14 +193,16 @@ export async function user_register(
             // ✅ STORE TOKENS IN COOKIES
             cookieStore.set("access_token", data.access_token, {
                 httpOnly: true,
-                secure: false, // production me true
+                secure: process.env.NODE_ENV === 'production',
                 path: "/",
+                maxAge: 60 // 1 minute (60 seconds)
             });
 
             cookieStore.set("refresh_token", data.refresh_token, {
                 httpOnly: true,
-                secure: false,
+                secure: process.env.NODE_ENV === 'production',
                 path: "/",
+                maxAge: 60 * 5 // 1 minute (60 seconds)
             });
 
             return {
@@ -223,14 +250,16 @@ export async function user_login(
             // ✅ STORE TOKENS IN COOKIES
             cookieStore.set("access_token", data.access_token, {
                 httpOnly: true,
-                secure: false, // production me true
+                secure: process.env.NODE_ENV === 'production',
                 path: "/",
+                maxAge: 60 // 1 minute (60 seconds)
             });
 
             cookieStore.set("refresh_token", data.refresh_token, {
                 httpOnly: true,
-                secure: false,
+                secure: process.env.NODE_ENV === 'production',
                 path: "/",
+                maxAge: 60 * 5 // 1 minute (60 seconds)
             });
 
             return {
@@ -284,29 +313,34 @@ export async function user_login(
 // };
 
 export async function authFetch(url: string, options: RequestInit = {}) {
-
     const cookieStore = await cookies();
     const access_token = cookieStore.get("access_token")?.value;
+    if (!access_token) {
+        redirect('/login');
+    }
+    let res: Response | null = null; // Initialize with null
 
     try {
-
-        if (!access_token) {
-            throw new Error("No access token found");
-        }
-
-        const res = await fetch(url, {
+        res = await fetch(url, {
             ...options,
             headers: {
                 ...(options.headers as HeadersInit || {}),
                 Authorization: `Bearer ${access_token}`,
             },
         });
-        console.log("response status check in acceses_token: ", res.status)
 
-        return res;
+        console.log("Status Check:", res.status);
 
     } catch (error) {
-        console.error(error);
+        // Agar fetch hi fail ho jaye (Network error)
+        console.error("Fetch failed:", error);
         throw error;
     }
+
+    // 🛑 Redirect MUST be outside try-catch
+    if (!res || res.status === 401 || res.status === 403) {
+        redirect('/login');
+    }
+
+    return res;
 }

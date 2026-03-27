@@ -10,7 +10,7 @@ const ToolTip = ({ tooltip_content, children }: { tooltip_content: string, child
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           {children}
         </TooltipTrigger>
         <TooltipContent>
