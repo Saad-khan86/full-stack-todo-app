@@ -40,11 +40,11 @@ export async function proxy(request: NextRequest) {
 
         return response;
       } else {
-        // Refresh fail hua (e.g. refresh token expired)
+        // Refresh fail (e.g. refresh token expired)
         return handleAuthFailure();
       }
     } catch (error) {
-      // Network issue ya server down
+      // Network issue or server down
       return handleAuthFailure();
     }
   }

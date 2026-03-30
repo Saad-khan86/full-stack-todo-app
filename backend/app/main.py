@@ -12,9 +12,7 @@ from app.auth import SECRET_KEY, ALGORITHM
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print('Creating Tables')
     create_tables()
-    print("Tables Created")
     yield
 
 app = FastAPI(lifespan=lifespan, title='My First Todo App', version='1.0.0')

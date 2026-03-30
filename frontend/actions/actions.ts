@@ -38,7 +38,6 @@ export async function get_all_todos() {
             throw error;
         }
 
-        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -73,7 +72,6 @@ export async function add_todo(state: { status: string; message: string }, formD
             throw error;
         }
 
-        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -106,7 +104,6 @@ export async function edit_todo(state: { status: string; message: string }, { id
             throw error;
         }
 
-        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -137,7 +134,6 @@ export async function status_changed(id: number, content: string, is_completed: 
             throw error;
         }
 
-        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -164,7 +160,6 @@ export async function delete_todo(id: number) {
             throw error;
         }
 
-        console.error("Action Error:", error);
         return { status: "error", message: "Something went wrong" };
     }
 }
@@ -275,43 +270,6 @@ export async function user_login(
     }
 }
 
-// export async function refresh_access_token() {
-
-//     let cookieStore = (await cookies())
-
-//     const refresh_token = cookieStore.get("refresh_token")?.value;
-
-//     console.log("checking refresh token in own func ", refresh_token)
-//     if (!refresh_token) {
-//         throw new Error("No refresh token found please login");
-//     }
-//     try {
-//         const response = await fetch("http://localhost:8000/refresh", {
-//             method: "POST",
-//             headers: {
-//                 "Content-Type": "application/json"
-//             },
-//             body: JSON.stringify({
-//                 refresh_token: refresh_token
-//             })
-//         });
-//         console.log("check status in refresh accses token", response.status)
-
-//         if (response.status == 401) {
-//             return null;
-//         }
-
-//         const data = await response.json();
-//         console.log("check data in refresh func", data);
-
-//         return data.access_token;
-
-//     }
-//     catch {
-//         throw new Error("Server error");
-//     }
-// };
-
 export async function authFetch(url: string, options: RequestInit = {}) {
     const cookieStore = await cookies();
     const access_token = cookieStore.get("access_token")?.value;
@@ -329,11 +287,8 @@ export async function authFetch(url: string, options: RequestInit = {}) {
             },
         });
 
-        console.log("Status Check:", res.status);
-
     } catch (error) {
-        // Agar fetch hi fail ho jaye (Network error)
-        console.error("Fetch failed:", error);
+
         throw error;
     }
 

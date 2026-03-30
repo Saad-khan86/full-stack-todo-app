@@ -41,7 +41,6 @@ async def register_user(new_user: Register_User, session: Annotated[Session, Dep
         refresh_token=refresh_token,
         token_type="bearer"
     )
-    # return {"message": f""" User with {new_user.username} successfully registered """}
 
 @user_router.get("/profile")
 async def user_profile(session:Annotated[Session, Depends(get_session)], current_user: Annotated[User, Depends(current_user)]):
