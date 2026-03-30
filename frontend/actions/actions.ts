@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 export async function get_all_todos() {
     try {
 
-        const response = await authFetch('http://127.0.0.1:8000/todos', {
+        const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/todos`, {
             method: 'GET',
             cache: 'no-store',
         });
@@ -55,7 +55,7 @@ export async function add_todo(
     // Optional: You can use prevState if needed (e.g., for progressive enhancement)
 
     try {
-        const response = await authFetch('http://127.0.0.1:8000/todos', {
+        const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/todos`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export async function add_todo(
 export async function edit_todo(state: { status: string; message: string }, { id, content, is_completed }: { id: number, content: string, is_completed: boolean }) {
 
     try {
-        const response = await authFetch(`http://127.0.0.1:8000/todos/${id}`, {
+        const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/todos/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -128,7 +128,7 @@ export async function edit_todo(state: { status: string; message: string }, { id
 export async function status_changed(id: number, content: string, is_completed: boolean) {
 
     try {
-        const response = await authFetch(`http://127.0.0.1:8000/todos/${id}`, {
+        const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/todos/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ export async function delete_todo(id: number) {
 
     try {
 
-        const response = await authFetch(`http://127.0.0.1:8000/todos/${id}`, {
+        const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/todos/${id}`, {
             method: 'DELETE'
         })
         if (response.ok) {
@@ -200,7 +200,7 @@ export async function user_register(
     let cookieStore = (await cookies())
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/user/register', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password })
@@ -253,7 +253,7 @@ export async function user_login(
         body.append("username", username);
         body.append("password", password);
 
-        const response = await fetch('http://127.0.0.1:8000/login', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

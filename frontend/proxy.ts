@@ -22,7 +22,7 @@ export async function proxy(request: NextRequest) {
   
   if (!access_token && refresh_token) {
     try {
-      const res = await fetch("http://localhost:8000/refresh", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: refresh_token })
