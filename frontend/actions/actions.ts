@@ -30,10 +30,14 @@ export async function get_all_todos() {
                 message: "Unauthorized"
             };
 
+        }else {
+            return { 
+                status: "error", 
+                message: "Failed to get todos" 
+            };
         }
 
     } catch (error) {
-        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
         if (isRedirectError(error)) {
             throw error;
         }
@@ -42,8 +46,13 @@ export async function get_all_todos() {
     }
 }
 
-export async function add_todo(state: { status: string; message: string }, formData: FormData) {
-    const content = formData.get("add_task") as string
+export async function add_todo(
+  prevState: { status: string; message: string } | undefined, 
+  formData: FormData
+) {
+    const content = formData.get("add_task") as string;
+
+    // Optional: You can use prevState if needed (e.g., for progressive enhancement)
 
     try {
         const response = await authFetch('http://127.0.0.1:8000/todos', {
@@ -52,27 +61,31 @@ export async function add_todo(state: { status: string; message: string }, formD
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ content })
-        })
+        });
 
-        const data = await response.json();
         if (response.ok) {
             revalidatePath("/todos/");
             return { status: "success", message: "Todo added successfully" };
         } else if (response.status === 401) {
-
             return {
                 status: "error",
                 message: "Unauthorized"
             };
-
+        } else {
+            return { 
+                status: "error", 
+                message: "Failed to add todo" 
+            };
         }
     } catch (error) {
-        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
         if (isRedirectError(error)) {
             throw error;
         }
-
-        return { status: "error", message: "Something went wrong" };
+       
+        return { 
+            status: "error", 
+            message: "Something went wrong" 
+        };
     }
 }
 
@@ -97,9 +110,13 @@ export async function edit_todo(state: { status: string; message: string }, { id
                 message: "Unauthorized"
             };
 
+        } else {
+            return { 
+                status: "error", 
+                message: "Failed to edit todo" 
+            };
         }
     } catch (error) {
-        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
         if (isRedirectError(error)) {
             throw error;
         }
@@ -121,15 +138,19 @@ export async function status_changed(id: number, content: string, is_completed: 
         if (response.ok) {
             revalidatePath("/todos/");
             return { status: "success", message: "status changed successfully" };
-        } else (response.status === 401)
+        }       
+        else if (response.status === 401)
         return {
             status: "error",
             message: "Unauthorized"
-
-
+        }; else {
+            return { 
+                status: "error", 
+                message: "Failed to status change" 
+            };
         }
+
     } catch (error) {
-        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
         if (isRedirectError(error)) {
             throw error;
         }
@@ -148,14 +169,18 @@ export async function delete_todo(id: number) {
         if (response.ok) {
             revalidatePath("/todos/");
             return { status: "success", message: "Todo deleted successfully" };
-        } else (response.status === 401)
+        } else if (response.status === 401)
         return {
             status: "error",
             message: "Unauthorized"
 
+        }; else {
+            return { 
+                status: "error", 
+                message: "Failed to delete todo" 
+            };
         }
     } catch (error) {
-        // 🛑 YE SABSE ZAROORI HAI: Redirect error ko re-throw karein
         if (isRedirectError(error)) {
             throw error;
         }
