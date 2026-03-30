@@ -1,7 +1,7 @@
 [project]
-name = "todo_app_backend"
+name = "full-stack-todo-app"
 version = "0.1.0"
-description = "this is simple backend for todo_app"
+description = "this is simple backend for full-stack-todo-app"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
